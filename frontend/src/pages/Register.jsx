@@ -1,15 +1,13 @@
-
-
 import React, { useState } from 'react';
 import toast from 'react-hot-toast';
-// import { registerUserApi } from "../services/api";
+import { Link, useNavigate } from "react-router-dom";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline"; 
+import { createUserApi } from "../services/api";
 
 const PostifyRegister = ({ setOpen, openLogin }) => {
-    // Separate states for password visibility
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
+    const navigate = useNavigate();
     const [formData, setFormData] = useState({
         username: "",
         email: "",
@@ -20,13 +18,29 @@ const PostifyRegister = ({ setOpen, openLogin }) => {
     const handleChange = (e) => {
         setFormData({
             ...formData,
-            [e.target.name]: e.target.value,
+            [e.target.name]: e.target.value
         });
     };
 
     const validate = () => {
-        if (!formData.username || !formData.email || !formData.password) {
-            toast.error('All fields are required');
+        if (!formData.username.trim()) {
+            toast.error('Username is required');
+            return false;
+        }
+        if (!formData.email.trim()) {
+            toast.error('Email is required');
+            return false;
+        }
+        if (!/\S+@\S+\.\S+/.test(formData.email)) {
+            toast.error('Invalid email format');
+            return false;
+        }
+        if (!formData.password.trim()) {
+            toast.error('Passwords is required');
+            return false;
+        }
+        if (formData.password.length < 6) {
+            toast.error('Password must be at least 6 characters');
             return false;
         }
         if (formData.password !== formData.confirmPassword) {
@@ -40,16 +54,27 @@ const PostifyRegister = ({ setOpen, openLogin }) => {
         e.preventDefault();
         if (!validate()) return;
         try {
-            const { confirmPassword, ...dataToSubmit } = formData;
-            const response = await registerUserApi(dataToSubmit);
-            if (response.data.success) {
-                toast.success("Account created!");
-                openLogin();
+            const dataToSubmit = {
+                username: formData.username, 
+                email: formData.email,
+                password: formData.password,
+                confirmPassword: formData.confirmPassword,
+            };
+            const response=await createUserApi(dataToSubmit) ;
+            if (response.status === 200 || response.status === 201) {
+                const userId = response.data.id; 
+               localStorage.setItem('tempUserId', userId);
+               toast.success("User created successfully!");
+               setTimeout(() => {
+                navigate("/login");
+              }, 2000);
             } else {
-                toast.error(response.data.message);
-            }
+            toast.error(response.data.message || "User creation failed!");
+           } 
         } catch (error) {
-            toast.error('Registration failed.');
+            console.error("Error Object:", error);
+            const errorMessage = error.response?.data?.message || error.message || 'Server is unreachable';
+            toast.error(errorMessage);
         }
     };
 
@@ -125,7 +150,9 @@ const PostifyRegister = ({ setOpen, openLogin }) => {
                         >
                             {!showConfirmPassword ? <EyeSlashIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}
                         </button>
+                        {/* <Button label={"register"} onclick={handleSubmit}/> */}
                     </div>
+                    
 
                     <button type="submit" className="bg-black text-white font-medium py-3 rounded-full mt-4">
                         Sign Up

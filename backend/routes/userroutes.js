@@ -7,6 +7,6 @@ const { addUser, getAllUsers,getUsersById,updateUser } = require('../controllers
 express.post("/register", addUser);
 express.get("/getallUsers", getAllUsers);
 express.get("/getUserByid/:uid", getUsersById);
-express.put("/updateUserByid/:id",authGuard,isAdmin,updateUser);
+express.put("/updateUserByid/:id",updateUser);
 
 module.exports=express;

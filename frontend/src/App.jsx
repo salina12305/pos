@@ -1,5 +1,6 @@
 
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 
 import LandingPage from './pages/LandingPage';
 import Login from './pages/Login';
@@ -9,6 +10,7 @@ import ForgotPw from './pages/ForgotPw';
 function App(){
   return (
     <Router>
+      <Toaster/>
       <Routes>
         <Route path="/" element={<LandingPage/>}/>
         <Route path="/login" element={<Login/>}/>

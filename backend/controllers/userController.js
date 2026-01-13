@@ -1,7 +1,8 @@
 
-const User =require("../models/usermodel")
+const User =require("../models/usermodel");
 const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken")
+const jwt = require("jsonwebtoken");
+const { use } = require("../routes/userroutes");
 
 
 const addUser = async (req,res) => {
@@ -12,27 +13,35 @@ const addUser = async (req,res) => {
                 message:"All fields are required"
             });
         }
-        const isUser = await User.findOne({where:(username)})
-        const isEmail = await User.findOne({where:(email)})
+        const isUser = await User.findOne({ where: { username } });
+        const isEmail = await User.findOne({ where: { email } });
 
         if(isUser || isEmail){
-            return res.json({msg:"user with this email exist!!", success:false })
+            return res.json({
+                success:false,
+                message:"User with this email exist!!"
+            });
         }
-        const hashed = await  bcrypt.hash(password,10)
-        console.log(hashed)
-        
+        const hashedPassword = await  bcrypt.hash(password,10)
+        console.log(hashedPassword)
         const newUser = await User.create({
-            username,
+            username: username,
             email,
-            password:hashed
+            password:hashedPassword
         });
-        res.status(201).json({
+        return res.status(201).json({
             success:true,
             message:"User added successfully",
-            user: newUser
+            user: {
+                id: newUser.id,
+                username: newUser.username,
+                email: newUser.email,
+              },
         });
     } catch (error){
-        res.status(500).json({
+        console.error(error);
+        return res.status(500).json({
+            success:false,
             message: "Error adding user",
             error:error.message
         });
@@ -90,7 +99,7 @@ const updateUser  = async (req, res) =>{
               return res.status(400).json({
                 success:false,
                 message: "user with that username exist!",
-              })
+              });
             }
         let hashedPassword= user.password;
         if(password){
