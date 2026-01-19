@@ -1,10 +1,10 @@
 
-
-
 import React, { useState } from 'react';
 import toast from 'react-hot-toast';
 import { useNavigate } from "react-router-dom";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
+import { loginUserApi } from '../services/api';
+import { jwtDecode } from 'jwt-decode';
 
 const PostifyLogin = ({ setOpen, openRegister, openForgotPw }) => {
     const navigate = useNavigate();
@@ -30,35 +30,39 @@ const PostifyLogin = ({ setOpen, openRegister, openForgotPw }) => {
 
         try {
             const response = await loginUserApi(formData);
+            console.log("Backend Response:", response.data);
             
-            if (response.data.success) {
+            if (response.status === 200 || response.status === 201) {
                 const token = response.data.token;
-                localStorage.setItem("token", token);
-                
-                if (response.data.user) {
-                    localStorage.setItem("user", JSON.stringify(response.data.user));
+        
+                if (!token) {
+                  return toast.error("Login worked, but no token was received.");
                 }
+                localStorage.setItem("token_postify", token);
 
+                if (response.data.user  && response.data.user.id) {
+                    localStorage.setItem("userId", response.data.user.id);
+                }
+                localStorage.setItem("user", JSON.stringify(response.data.user));
                 toast.success(response.data.message || "Login successful!");
-                setOpen(false); 
-
+                let decoded;
                 try {
-                    const decoded = jwtDecode(token);
-                    if (decoded.role === "admin") {
-                        navigate("/admindash");
-                    } else {
-                        navigate("/userdash");
-                    }
-                } catch (decodeError) {
-                    console.error("Token decoding failed:", decodeError);
-                    navigate("/userdash"); 
+                    decoded = jwtDecode(token);
+                    console.log("Decoded Token Data:", decoded);
+                } catch (tokenError) {
+                  console.error("JWT Decode Error:", tokenError);
+                  return toast.error("Token format is invalid.");
                 }
+                setTimeout(() => {
+                    navigate("/userdashboard"); 
+                }, 2000);
             } else {
                 toast.error(response.data.message || "Login failed!");
             }
         } catch (error) {
-            console.error(error);
-            toast.error('Invalid credentials or server error.');
+            const errorMessage = error.response?.data?.message || "Internal Server Error";
+            toast.error(errorMessage);
+            console.error("Login Error:", error);
         }
     };
 

@@ -1,12 +1,18 @@
 
+const router = require("express").Router();
 
-const express= require("express").Router();
+const { addUser, 
+    getAllUsers,
+    getUsersById,
+    updateUser,
+    deleteUser,
+    loginUser
+ } = require('../controllers/userController')
 
-const { addUser, getAllUsers,getUsersById,updateUser } = require('../controllers/userController')
+router.post("/register", addUser);
+router.post("/login", loginUser);
+router.get("/getallUsers", getAllUsers);
+router.get("/getUserByid/:uid", getUsersById);
+router.put("/updateUserByid/:id",updateUser);
 
-express.post("/register", addUser);
-express.get("/getallUsers", getAllUsers);
-express.get("/getUserByid/:uid", getUsersById);
-express.put("/updateUserByid/:id",updateUser);
-
-module.exports=express;
+module.exports=router;
