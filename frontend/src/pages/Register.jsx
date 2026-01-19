@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import toast from 'react-hot-toast';
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline"; 
 import { createUserApi } from "../services/api";
 
@@ -152,7 +152,6 @@ const PostifyRegister = ({ setOpen, openLogin }) => {
                         </button>
                         {/* <Button label={"register"} onclick={handleSubmit}/> */}
                     </div>
-                    
 
                     <button type="submit" className="bg-black text-white font-medium py-3 rounded-full mt-4">
                         Sign Up
@@ -160,7 +159,7 @@ const PostifyRegister = ({ setOpen, openLogin }) => {
                 </form>
 
                 <p className="text-center mt-8 text-sm">
-                    Already have an account? <button className="text-pink-600 font-semibold" onClick={openLogin}>Sign In</button>
+                    Already have an account? <button className="text-emerald-600 font-semibold hover:underline" onClick={openLogin}>Sign In</button>
                 </p>
             </div>
         </div>

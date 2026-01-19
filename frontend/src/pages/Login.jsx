@@ -122,7 +122,7 @@ const PostifyLogin = ({ setOpen, openRegister, openForgotPw }) => {
                             <button 
                                 type="button"
                                 onClick={openForgotPw} 
-                                className="text-xs text-pink-600 font-medium hover:underline cursor-pointer"
+                                className="text-xs text-emerald-600 font-medium hover:underline cursor-pointer"
                             >
                                 Forgot password?
                             </button>
@@ -144,7 +144,7 @@ const PostifyLogin = ({ setOpen, openRegister, openForgotPw }) => {
                         No account?{" "}
                         <button 
                             type="button"
-                            className="text-pink-600 font-semibold hover:underline"
+                            className="text-emerald-600 font-semibold hover:underline"
                             onClick={openRegister}
                         >
                             Create one
