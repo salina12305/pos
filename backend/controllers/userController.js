@@ -63,7 +63,8 @@ const getUsersById  = async (req, res) =>{
         return res.json({
             id: user.id, 
             username: user.username, 
-            email: user.email
+            email: user.email,
+            createdAt: user.createdAt
         });
     } catch (error) {
         return res.status(500).json({ 
@@ -153,7 +154,7 @@ const loginUser=async(req,res)=>{
             });
         }
         const token = jwt.sign(
-            { id: user.id, role: user.role, email: user.email },
+            { id: user.id, role: user.role, email: user.email, username:user.username },
             process.env.JWT_SECRET || "your_fallback_secret", 
             { expiresIn: "7d" }
         );
@@ -163,7 +164,8 @@ const loginUser=async(req,res)=>{
             token,
             user: { 
                 id: user.id,
-                fullName: user.fullName, 
+                username: user.username,
+                email: user.email, 
                 role: user.role 
             }
         });
