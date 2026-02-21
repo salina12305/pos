@@ -72,9 +72,45 @@ const deletePost = async (req, res) => {
   }
 };
 
+const likePost = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { userId } = req.body;
+
+    const post = await Post.findByPk(id);
+    if (!post) return res.status(404).json({ success: false, message: "Post not found" });
+
+    // Ensure currentLikes is an array (and not a reference to the old one)
+    let currentLikes = Array.isArray(post.likes) ? [...post.likes] : [];
+
+    const userIdStr = String(userId);
+    const index = currentLikes.indexOf(userIdStr);
+
+    if (index === -1) {
+      currentLikes.push(userIdStr); // Add like
+    } else {
+      currentLikes.splice(index, 1); // Remove like
+    }
+
+    // Assign the NEW array to the post
+    post.likes = currentLikes; 
+    
+    // CRITICAL: Tell Sequelize the JSON field has changed
+    post.changed('likes', true); 
+
+    await post.save();
+
+    res.status(200).json({ success: true, data: post });
+  } catch (err) {
+    console.error("Server Like Error:", err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
 module.exports = {
     createPost,
     getPublishedPosts,
     getDraftsByUser,
-    deletePost
+    deletePost,
+    likePost
 };

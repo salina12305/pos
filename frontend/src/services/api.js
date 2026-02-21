@@ -45,3 +45,8 @@ export const createPostApi = (data) => Api.post("/api/posts/create", data, getMu
 export const getPublishedPostsApi = () => Api.get("/api/posts/get_published", getAuthHeader());
 export const getUserDraftsApi = (userId) => Api.get(`/api/posts/get_drafts/${userId}`, getAuthHeader());
 export const deletePostApi = (id) => Api.delete(`/api/posts/delete/${id}`, getAuthHeader());
+export const likePostApi = (id, userId) => 
+    Api.put(`/api/posts/like/${id}`, { userId }, getAuthHeader());
+
+export const addCommentApi = (id, data) => 
+    Api.post(`/api/posts/comment/${id}`, data, getAuthHeader());

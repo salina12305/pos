@@ -20,19 +20,23 @@ const Post = sequelize.define("Post", {
         allowNull: true
     },
     status: {
-        type: DataTypes.ENUM('draft', 'published'),
-        defaultValue: 'draft'
+      type: DataTypes.ENUM('draft', 'published'),
+      defaultValue: 'draft'
     },
     author: {
         type: DataTypes.STRING,
         allowNull: false
     },
     userId: {
-        type: DataTypes.STRING,
-        allowNull: false
+      type: DataTypes.STRING,
+      allowNull: false
+    },
+    likes: {
+      type: DataTypes.JSON, 
+      defaultValue: []
     }
 }, {
-    timestamps: true
+  timestamps: true
 });
 
 module.exports = Post;

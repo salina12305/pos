@@ -1,8 +1,9 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Navbar from './components/Navbar'; // Path verified from your screenshot
+import Navbar from './components/Navbar'; 
 import { PhotoIcon, ArrowLeftIcon } from "@heroicons/react/24/outline";
 import { createPostApi } from '../services/api';
+import toast from 'react-hot-toast'; // Import toast
 
 const CreatePostPage = () => {
     const navigate = useNavigate();
@@ -17,54 +18,63 @@ const CreatePostPage = () => {
 
     // --- User Session ---
     const storedUser = JSON.parse(localStorage.getItem("user"));
-    const userEmail = storedUser?.email || "Storyteller";
+    const userEmail = storedUser?.username || storedUser?.email || "Storyteller";
 
     // --- Image Selection Handler ---
     const handleImageChange = (e) => {
         const file = e.target.files[0];
         if (file) {
+            // Check file size (optional but recommended: e.g., 5MB limit)
+            if (file.size > 5 * 1024 * 1024) {
+                return toast.error("Image is too large. Please select a file under 5MB.");
+            }
             setSelectedImage(file);
             setImagePreview(URL.createObjectURL(file));
+            toast.success("Image selected!");
         }
     };
 
-    // --- Unified Submit Logic (Handles Draft & Publish) ---
+    // --- Submit Logic ---
     const handleSubmit = async (status) => {
-      if (!title || !snippet || !selectedImage) {
-          alert("Please provide a title, content, and an image.");
-          return;
-      }
-  
-      setIsLoading(true);
-  
-      // Prepare FormData
-      const formData = new FormData();
-      formData.append('title', title);
-      formData.append('snippet', snippet);
-      formData.append('status', status);
-      formData.append('author', userEmail);
-      formData.append('userId', storedUser?.id || "123");
-      formData.append('image', selectedImage); 
-  
-      try {
-          const response = await createPostApi(formData);
-  
-          if (response.data.success) {
-              console.log("Post Created:", response.data);
-              status === 'draft' ? navigate("/profile") : navigate("/feedpage");
-          }
-      } catch (error) {
-          console.error("Submission error:", error);
-          // Axios stores the server error message in error.response.data
-          alert(error.response?.data?.message || "Error connecting to server");
-      } finally {
-          setIsLoading(false);
-      }
-  };
+        // Validation with Toasts
+        if (!title.trim()) return toast.error("Please enter a story title.");
+        if (!snippet.trim()) return toast.error("Your story content cannot be empty.");
+        if (!selectedImage) return toast.error("Please upload a cover image.");
+
+        setIsLoading(true);
+        const loadId = toast.loading(status === 'draft' ? "Saving draft..." : "Publishing your story...");
+
+        // Prepare FormData for Multer/Backend
+        const formData = new FormData();
+        formData.append('title', title);
+        formData.append('snippet', snippet);
+        formData.append('status', status);
+        formData.append('author', userEmail);
+        formData.append('userId', storedUser?.id || storedUser?._id || "123");
+        formData.append('image', selectedImage); 
+
+        try {
+            const response = await createPostApi(formData);
+
+            if (response.data.success) {
+                toast.success(status === 'draft' ? "Draft saved!" : "Story published successfully!", { id: loadId });
+                
+                // Redirect based on status
+                setTimeout(() => {
+                    status === 'draft' ? navigate("/profile") : navigate("/feedpage");
+                }, 1000);
+            }
+        } catch (error) {
+            console.error("Submission error:", error);
+            const errorMsg = error.response?.data?.message || "Error connecting to server";
+            toast.error(errorMsg, { id: loadId });
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     return (
         <div className="min-h-screen bg-[#F8F9FA] font-sans pb-20">
-            {/* Reusable Navbar */}
             <Navbar />
 
             <main className="max-w-2xl mx-auto py-10 px-6">
@@ -79,7 +89,7 @@ const CreatePostPage = () => {
 
                 <div className="bg-white rounded-[2.5rem] shadow-sm border border-gray-100 overflow-hidden">
                     
-                    {/* --- Image Picker (Mirrors Android UI) --- */}
+                    {/* --- Image Picker --- */}
                     <div 
                         onClick={() => fileInputRef.current.click()}
                         className="relative h-72 bg-gray-50 border-b border-gray-100 cursor-pointer group flex items-center justify-center overflow-hidden"
@@ -124,7 +134,7 @@ const CreatePostPage = () => {
                                 value={title}
                                 onChange={(e) => setTitle(e.target.value)}
                                 placeholder="Story Title"
-                                className="w-full text-4xl font-serif font-bold border-none focus:ring-0 placeholder:text-gray-100 p-0"
+                                className="w-full text-4xl font-serif font-bold border-none focus:ring-0 placeholder:text-gray-200 p-0"
                             />
                             
                             <div className="h-[1px] bg-gray-100 w-1/4"></div>
@@ -134,7 +144,7 @@ const CreatePostPage = () => {
                                 value={snippet}
                                 onChange={(e) => setSnippet(e.target.value)}
                                 placeholder="Start writing your untold story..."
-                                className="w-full text-xl font-serif text-gray-600 border-none focus:ring-0 placeholder:text-gray-100 p-0 resize-none leading-relaxed"
+                                className="w-full text-xl font-serif text-gray-600 border-none focus:ring-0 placeholder:text-gray-200 p-0 resize-none leading-relaxed"
                             ></textarea>
                         </div>
 
@@ -152,7 +162,7 @@ const CreatePostPage = () => {
                                 onClick={() => handleSubmit('published')}
                                 disabled={isLoading}
                                 className={`flex-[2] py-4 rounded-2xl font-bold text-white shadow-xl transition flex items-center justify-center gap-3
-                                    ${isLoading ? 'bg-gray-300' : 'bg-emerald-700 hover:bg-emerald-800 hover:scale-[1.02] active:scale-95'}`}
+                                    ${isLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-emerald-700 hover:bg-emerald-800 hover:scale-[1.02] active:scale-95'}`}
                             >
                                 {isLoading ? (
                                     <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
@@ -161,10 +171,6 @@ const CreatePostPage = () => {
                                 )}
                             </button>
                         </div>
-
-                        <p className="text-center mt-6 text-xs text-gray-400 font-medium">
-                            By publishing, your story will be visible to everyone on the Trending Feed.
-                        </p>
                     </div>
                 </div>
             </main>
