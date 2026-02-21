@@ -28,7 +28,19 @@ const getAuthConfig = () => ({
     }
 });
 
+const getMultipartConfig = () => ({
+    headers: {
+        'authorization': `Bearer ${localStorage.getItem("token_postify")}`,
+        'Content-Type': 'multipart/form-data'
+    }
+});
+
 // --- USER & ADMIN APIS ---
 export const createUserApi = (data) => Api.post("/api/user/register", data);
 export const loginUserApi = (data) => Api.post("api/user/login", data);
 export const getUserById = (id) => Api.get(`/api/user/getUserByid/${id}`, getAuthHeader());
+
+// --- POST APIS ---
+export const createPostApi = (data) => Api.post("/api/posts/create", data, getMultipartConfig());
+export const getPublishedPostsApi = () => Api.get("/api/posts/get_published", getAuthHeader());
+export const getUserDraftsApi = (userId) => Api.get(`/api/posts/get_drafts/${userId}`, getAuthHeader());
