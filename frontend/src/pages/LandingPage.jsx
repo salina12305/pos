@@ -15,10 +15,10 @@ const LandingPage = () => {
 
       {/* Navbar */}
       <header className="flex justify-between items-center px-10 py-6 border-b border-gray-300">
-      <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate("/")}>          
+      <div className="flex items-center gap-1 cursor-pointer" onClick={() => navigate("/")}>          
         <img src="logo.png" alt="Postify Logo" className="w-14 h-14 object-contain"/>
-        <div className="text-2xl font-bold">Postify</div>
-      </div>
+      <div className="text-2xl font-bold">Postify</div>
+    </div>
 
         <nav className="flex items-center gap-8 font-sans text-[16px]">
           <Link

@@ -32,29 +32,52 @@ const PostifyLogin = ({ setOpen, openRegister, openForgotPw }) => {
             const response = await loginUserApi(formData);
             console.log("Backend Response:", response.data);
             
+            // if (response.status === 200 || response.status === 201) {
+            //     const token = response.data.token;
+        
+            //     if (!token) {
+            //       return toast.error("Login worked, but no token was received.");
+            //     }
+            //     localStorage.setItem("token_postify", token);
+
+            //     if (response.data.user  && response.data.user.id) {
+            //         localStorage.setItem("userId", response.data.user.id);
+            //     }
+            //     localStorage.setItem("user", JSON.stringify(response.data.user));
+            //     toast.success(response.data.message || "Login successful!");
+            //     let decoded;
+            //     try {
+            //         decoded = jwtDecode(token);
+            //         console.log("Decoded Token Data:", decoded);
+            //     } catch (tokenError) {
+            //       console.error("JWT Decode Error:", tokenError);
+            //       return toast.error("Token format is invalid.");
+            //     }
+            //     setTimeout(() => {
+            //         navigate("/feedpage"); 
+            //     }, 2000);
             if (response.status === 200 || response.status === 201) {
                 const token = response.data.token;
-        
-                if (!token) {
-                  return toast.error("Login worked, but no token was received.");
-                }
                 localStorage.setItem("token_postify", token);
-
-                if (response.data.user  && response.data.user.id) {
-                    localStorage.setItem("userId", response.data.user.id);
-                }
-                localStorage.setItem("user", JSON.stringify(response.data.user));
-                toast.success(response.data.message || "Login successful!");
-                let decoded;
-                try {
-                    decoded = jwtDecode(token);
-                    console.log("Decoded Token Data:", decoded);
-                } catch (tokenError) {
-                  console.error("JWT Decode Error:", tokenError);
-                  return toast.error("Token format is invalid.");
-                }
+            
+                // 1. Decode the token to get the "Live" data stored inside it
+                const decoded = jwtDecode(token);
+                
+                // 2. Combine backend user data with decoded token data to be safe
+                const userData = {
+                    id: response.data.user?.id || decoded.id,
+                    username: decoded.username || response.data.user?.username,
+                    email: decoded.email || response.data.user?.email
+                };
+            
+                // 3. Save this robust object to localStorage
+                localStorage.setItem("user", JSON.stringify(userData));
+                localStorage.setItem("userId", userData.id);
+            
+                toast.success(`Welcome back, ${userData.username || 'User'}!`);
+                
                 setTimeout(() => {
-                    navigate("/userdashboard"); 
+                    navigate("/feedpage"); 
                 }, 2000);
             } else {
                 toast.error(response.data.message || "Login failed!");
