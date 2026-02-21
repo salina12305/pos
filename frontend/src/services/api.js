@@ -44,3 +44,4 @@ export const getUserById = (id) => Api.get(`/api/user/getUserByid/${id}`, getAut
 export const createPostApi = (data) => Api.post("/api/posts/create", data, getMultipartConfig());
 export const getPublishedPostsApi = () => Api.get("/api/posts/get_published", getAuthHeader());
 export const getUserDraftsApi = (userId) => Api.get(`/api/posts/get_drafts/${userId}`, getAuthHeader());
+export const deletePostApi = (id) => Api.delete(`/api/posts/delete/${id}`, getAuthHeader());

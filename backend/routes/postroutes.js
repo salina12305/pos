@@ -11,4 +11,7 @@ router.get('/get_published', authGuard, postController.getPublishedPosts);
 
 router.get('/get_drafts/:userId', authGuard, postController.getDraftsByUser);
 
+// Path: /api/posts/delete/:id
+router.delete('/delete/:id', authGuard, postController.deletePost);
+
 module.exports = router;
