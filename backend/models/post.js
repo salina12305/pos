@@ -34,6 +34,10 @@ const Post = sequelize.define("Post", {
     likes: {
       type: DataTypes.JSON, 
       defaultValue: []
+    },
+    comments: {
+      type: DataTypes.JSON, 
+      defaultValue: []
     }
 }, {
   timestamps: true

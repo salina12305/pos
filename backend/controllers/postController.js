@@ -107,10 +107,47 @@ const likePost = async (req, res) => {
   }
 };
 
+const addComment = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { text, user } = req.body;
+
+    if (!text) return res.status(400).json({ success: false, message: "Comment text is required" });
+
+    const post = await Post.findByPk(id);
+    if (!post) return res.status(404).json({ success: false, message: "Post not found" });
+
+    // 1. Create a new copy of the existing comments array
+    const currentComments = Array.isArray(post.comments) ? [...post.comments] : [];
+
+    // 2. Build the new comment object
+    const newComment = {
+      id: Date.now(), // Simple unique ID
+      user: user || "Anonymous",
+      text: text,
+      createdAt: new Date()
+    };
+
+    // 3. Push and Save
+    currentComments.push(newComment);
+    post.comments = currentComments;
+    
+    // 4. CRITICAL: Force Sequelize to recognize the change
+    post.changed('comments', true); 
+    await post.save();
+
+    res.status(200).json({ success: true, data: post });
+  } catch (err) {
+    console.error("Comment Error:", err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
 module.exports = {
     createPost,
     getPublishedPosts,
     getDraftsByUser,
     deletePost,
-    likePost
+    likePost,
+    addComment
 };

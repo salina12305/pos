@@ -14,6 +14,6 @@ router.get('/get_drafts/:userId', authGuard, postController.getDraftsByUser);
 // Path: /api/posts/delete/:id
 router.delete('/delete/:id', authGuard, postController.deletePost);
 router.put('/like/:id', authGuard, postController.likePost);
-// router.post('/comment/:id', authGuard, postController.addComment);
+router.post('/comment/:id', authGuard, postController.addComment);
 
 module.exports = router;
