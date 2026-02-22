@@ -39,8 +39,12 @@ const getPublishedPosts = async (req, res) => {
 
 const getDraftsByUser = async (req, res) => {
   try {
+    const { userId } = req.params; // Get ID from URL
     const drafts = await Post.findAll({
-      where: { userId: req.params.userId, status: 'draft' },
+      where: { 
+        userId: userId, 
+        status: 'draft' 
+      },
       order: [['updatedAt', 'DESC']]
     });
     res.status(200).json({ success: true, data: drafts });
