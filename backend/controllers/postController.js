@@ -110,7 +110,7 @@ const likePost = async (req, res) => {
 const addComment = async (req, res) => {
   try {
     const { id } = req.params;
-    const { text, user } = req.body;
+    const { text, user, userId } = req.body;
 
     if (!text) return res.status(400).json({ success: false, message: "Comment text is required" });
 
@@ -122,7 +122,8 @@ const addComment = async (req, res) => {
 
     // 2. Build the new comment object
     const newComment = {
-      id: Date.now(), // Simple unique ID
+      id: Date.now().toString(), // Simple unique ID
+      userId: userId,
       user: user || "Anonymous",
       text: text,
       createdAt: new Date()
@@ -143,11 +144,88 @@ const addComment = async (req, res) => {
   }
 };
 
+const updateComment = async (req, res) => {
+  try {
+    const { postId, commentId } = req.params;
+    const { text, userId } = req.body;
+
+    const post = await Post.findByPk(postId);
+    if (!post) return res.status(404).json({ success: false, message: "Post not found" });
+
+    // Use a fresh copy of the array
+    const comments = Array.isArray(post.comments) ? [...post.comments] : [];
+    
+    // Safety check: find the index using string comparison
+    const index = comments.findIndex(c => String(c.id) === String(commentId));
+
+    if (index === -1) {
+      return res.status(404).json({ success: false, message: "Comment not found" });
+    }
+
+    // Owner check
+    if (String(comments[index].userId) !== String(userId)) {
+      return res.status(403).json({ success: false, message: "Unauthorized" });
+    }
+
+    // Update the data
+    comments[index].text = text;
+    comments[index].updatedAt = new Date();
+
+    // Reassign and save
+    post.comments = comments;
+    post.changed('comments', true); 
+    await post.save();
+
+    res.status(200).json({ success: true, data: post });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+const deleteComment = async (req, res) => {
+  try {
+    const { postId, commentId } = req.params;
+    const { userId } = req.body; // The ID of the person trying to delete
+
+    const post = await Post.findByPk(postId);
+    if (!post) return res.status(404).json({ success: false, message: "Post not found" });
+
+    const comments = Array.isArray(post.comments) ? [...post.comments] : [];
+    const commentIndex = comments.findIndex(c => String(c.id) === String(commentId));
+
+    if (commentIndex === -1) {
+      return res.status(404).json({ success: false, message: "Comment not found" });
+    }
+
+    // AUTH CHECK: Is it the comment owner OR the post owner?
+    const isCommentOwner = String(comments[commentIndex].userId) === String(userId);
+    const isPostOwner = String(post.userId) === String(userId);
+
+    if (!isCommentOwner && !isPostOwner) {
+      return res.status(403).json({ success: false, message: "Unauthorized to delete this comment" });
+    }
+
+    // Remove the comment
+    comments.splice(commentIndex, 1);
+
+    post.comments = comments;
+    post.changed('comments', true);
+    await post.save();
+
+    res.status(200).json({ success: true, data: post });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
 module.exports = {
     createPost,
     getPublishedPosts,
     getDraftsByUser,
     deletePost,
     likePost,
-    addComment
+    addComment,
+    updateComment,
+    deleteComment
 };

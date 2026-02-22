@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from "react-router-dom";
 import Navbar from './components/Navbar';
-import { getPublishedPostsApi, deletePostApi, likePostApi, addCommentApi } from '../services/api';
+import { getPublishedPostsApi, deletePostApi, likePostApi, addCommentApi, updateCommentApi, deleteCommentApi } from '../services/api';
 import toast from 'react-hot-toast'; 
 import { 
     ChatBubbleLeftIcon, 
@@ -14,7 +14,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { HeartIcon as HeartIconSolid } from "@heroicons/react/24/solid";
 
-const API_BASE_URL = "http://localhost:3000";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const FeedPage = () => {
     const navigate = useNavigate();
@@ -132,7 +132,9 @@ const PostCard = ({ post, onCardClick, currentUserId, onDeleteRefresh, navigate 
         ), { duration: 5000, style: { background: '#333' } });
     };
 
-    const imageSrc = post.image?.startsWith('http') ? post.image : `${API_BASE_URL}/uploads/${post.image}`;
+    const imageSrc = post.image?.startsWith('http') 
+    ? post.image 
+    : `${API_BASE_URL}/uploads/${post.image}`;
     const fallbackImage = "https://images.unsplash.com/photo-1499750310107-5fef28a66643?auto=format&fit=crop&w=800&q=80";
 
     return (
@@ -179,10 +181,14 @@ const PostCard = ({ post, onCardClick, currentUserId, onDeleteRefresh, navigate 
     );
 };
 
-/* --- FullPostModal Component --- */
+/* --- FullPostModal Component  --- */
 const FullPostModal = ({ post, user, onClose, onRefresh }) => {
     const [commentText, setCommentText] = useState("");
+    const [editingCommentId, setEditingCommentId] = useState(null);
+    const [editText, setEditText] = useState("");
+    
     const comments = post.comments || [];
+    const currentUserId = user?.id || user?.userId || user?._id;
 
     const handleCommentSubmit = async (e) => {
         e.preventDefault();
@@ -191,7 +197,8 @@ const FullPostModal = ({ post, user, onClose, onRefresh }) => {
         try {
             const response = await addCommentApi(post._id || post.id, {
                 text: commentText,
-                user: user?.username || user?.firstName || "Anonymous"
+                user: user?.username || user?.firstName || "Anonymous",
+                userId: currentUserId // Critical: Store the ID
             });
             if (response.data.success) {
                 toast.success("Commented!", { id: loadId });
@@ -201,7 +208,72 @@ const FullPostModal = ({ post, user, onClose, onRefresh }) => {
         } catch (err) { toast.error("Failed to post.", { id: loadId }); }
     };
 
-    const imageSrc = post.image?.startsWith('http') ? post.image : `${API_BASE_URL}/uploads/${post.image}`;
+    const handleUpdateComment = async (commentId) => {
+        if (!editText.trim()) return;
+        
+        const loadId = toast.loading("Updating...");
+        // Ensure we are getting the correct UUID from Sequelize
+        const postId = post.id; 
+    
+        try {
+            const response = await updateCommentApi(postId, commentId, {
+                text: editText,
+                userId: currentUserId 
+            });
+    
+            if (response.data.success) {
+                toast.success("Updated!", { id: loadId });
+                setEditingCommentId(null);
+                onRefresh();
+            }
+        } catch (err) {
+            // IMPROVED DEBUGGING:
+            console.error("Full Error Object:", err);
+            const errorMessage = err.response?.data?.message || "Update failed.";
+            toast.error(errorMessage, { id: loadId });
+        }
+    };
+
+    const handleDeleteComment = (commentId) => {
+        toast((t) => (
+            <div className="flex flex-col gap-2">
+                <span className="text-sm font-medium text-white-900">
+                    Delete this comment?
+                </span>
+                <div className="flex gap-2">
+                    <button
+                        onClick={async () => {
+                            toast.dismiss(t.id);
+                            const loadId = toast.loading("Removing...");
+                            try {
+                                const response = await deleteCommentApi(post.id, commentId, currentUserId);
+                                if (response.data.success) {
+                                    toast.success("Comment deleted!", { id: loadId });
+                                    onRefresh();
+                                }
+                            } catch (err) {
+                                toast.error("Failed to delete.", { id: loadId });
+                            }
+                        }}
+                        className="bg-red-500 text-white px-3 py-1 rounded-md text-xs font-bold hover:bg-red-600 transition"
+                    >
+                        Delete
+                    </button>
+                    <button
+                        onClick={() => toast.dismiss(t.id)}
+                        className="bg-gray-200 text-gray-700 px-3 py-1 rounded-md text-xs font-bold hover:bg-gray-300 transition"
+                    >
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        )
+    );
+    };
+
+const imageSrc = post.image?.startsWith('http') 
+    ? post.image 
+    : `${API_BASE_URL}/uploads/${post.image}`;
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
@@ -210,6 +282,7 @@ const FullPostModal = ({ post, user, onClose, onRefresh }) => {
                     <XMarkIcon className="w-6 h-6 text-gray-900" />
                 </button>
 
+                {/* Left Side: Post Content */}
                 <div className="flex-1 overflow-y-auto border-r border-gray-100">
                     <img src={imageSrc} className="w-full h-80 object-cover" alt="Cover" />
                     <div className="p-10">
@@ -225,28 +298,91 @@ const FullPostModal = ({ post, user, onClose, onRefresh }) => {
                     </div>
                 </div>
 
+                {/* Right Side: Comments Section */}
                 <div className="w-full md:w-96 bg-gray-50 flex flex-col h-full">
                     <div className="p-6 border-b border-gray-200 bg-white font-bold">Discussion ({comments.length})</div>
+                    
                     <div className="flex-1 overflow-y-auto p-6 space-y-4">
-                        {comments.length > 0 ? comments.map((c, idx) => (
-                            <div key={idx} className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
-                                <p className="text-xs font-bold text-emerald-700 mb-1">@{c.user}</p>
-                                <p className="text-sm text-gray-700 leading-snug">{c.text}</p>
+                    {comments.length > 0 ? comments.map((c) => {
+                        // PERMISSION CHECKS
+                        const isCommentOwner = String(c.userId) === String(currentUserId);
+                        const isPostCreator = String(post.userId) === String(currentUserId);
+                        return (
+                            <div key={c.id} className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 group">
+                                <div className="flex justify-between items-center mb-1">
+                                    <p className="text-xs font-bold text-emerald-700">@{c.user}</p>
+                    
+                                    {/* Action Buttons: Visible on hover of the comment card */}
+                                <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        
+                                    {/* EDIT: Only shown to the person who wrote the comment */}
+                                    {isCommentOwner && editingCommentId !== c.id && (
+                                        <button onClick={() => { setEditingCommentId(c.id); setEditText(c.text); }}
+                                            className="text-[10px] text-blue-500 hover:text-blue-700 font-bold"
+                                        >
+                                            Edit
+                                        </button>
+                                    )}
+
+                                    {/* DELETE: Shown to the comment owner OR the post creator */}
+                                    {(isCommentOwner || isPostCreator) && (
+                                        <button onClick={() => handleDeleteComment(c.id)}
+                                            className="text-[10px] text-red-500 hover:text-red-700 font-bold"
+                                        >
+                                            Delete
+                                        </button>
+                                    )}
+                                </div>
                             </div>
-                        )) : <p className="text-center text-gray-400 text-sm py-10">Be the first to comment!</p>}
+
+                            {editingCommentId === c.id ? (
+                                <div className="space-y-2 mt-2">
+                                    <textarea className="w-full text-sm p-2 border border-emerald-100 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                                        value={editText}
+                                        onChange={(e) => setEditText(e.target.value)}
+                                        rows="2"
+                                    />
+                                    <div className="flex gap-2">
+                                        <button onClick={() => handleUpdateComment(c.id)}
+                                            className="text-[10px] bg-emerald-600 text-white px-3 py-1 rounded-full font-bold hover:bg-emerald-700"
+                                        >
+                                            Save
+                                        </button>
+                                        <button onClick={() => setEditingCommentId(null)}
+                                            className="text-[10px] bg-gray-200 text-gray-600 px-3 py-1 rounded-full font-bold hover:bg-gray-300"
+                                        >
+                                            Cancel
+                                        </button>
+                                    </div>
+                                </div>
+                            ) : (
+                                <p className="text-sm text-gray-700 leading-snug">{c.text}</p>
+                            )}
+                        </div>
+                    );
+                    }) : (
+                        <div className="flex flex-col items-center justify-center py-10 text-gray-400">
+                            <ChatBubbleLeftIcon className="w-8 h-8 mb-2 opacity-20" />
+                            <p className="text-sm">Be the first to comment!</p>
+                        </div>
+                    )}
                     </div>
-                    <form onSubmit={handleCommentSubmit} className="p-4 bg-white border-t border-gray-200 relative">
-                        <input 
-                            type="text" 
-                            value={commentText}
-                            onChange={(e) => setCommentText(e.target.value)}
-                            placeholder="Add a comment..."
-                            className="w-full py-3 px-4 pr-12 bg-gray-100 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                        />
-                        <button type="submit" className="absolute right-6 top-6 text-emerald-600 hover:scale-110 transition">
-                            <PaperAirplaneIcon className="w-5 h-5" />
-                        </button>
-                    </form>
+
+                    {/* New Comment Input */}
+                    <div className="p-4 bg-white border-t border-gray-200">
+                        <form onSubmit={handleCommentSubmit} className="relative">
+                            <input 
+                                type="text" 
+                                value={commentText}
+                                onChange={(e) => setCommentText(e.target.value)}
+                                placeholder="Add a comment..."
+                                className="w-full py-3 px-4 pr-12 bg-gray-100 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                            />
+                            <button type="submit" className="absolute right-2 top-1.5 p-1.5 bg-emerald-600 text-white rounded-full hover:bg-emerald-700 transition">
+                                <PaperAirplaneIcon className="w-4 h-4" />
+                            </button>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>

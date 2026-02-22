@@ -4,25 +4,14 @@ const baseURL = import.meta.env.VITE_API_BASE_URL;
 
 const Api = axios.create({
     baseURL: baseURL,
-    withCredentials:false,
+    withCredentials:true,
     headers:{
-        "Content-Type": "application/json",
-    },
+        "Content-Type": "application/json"
+    }
 });
 
-const config = {
-    headers:{
-        'authorization' : `Bearer ${localStorage.getItem("token_postify")}`
-    }
-}
 // Helper to get fresh headers for every request
 const getAuthHeader = () => ({
-    headers: {
-        'authorization': `Bearer ${localStorage.getItem("token_postify")}`
-    }
-});
-
-const getAuthConfig = () => ({
     headers: {
         'authorization': `Bearer ${localStorage.getItem("token_postify")}`
     }
@@ -45,8 +34,19 @@ export const createPostApi = (data) => Api.post("/api/posts/create", data, getMu
 export const getPublishedPostsApi = () => Api.get("/api/posts/get_published", getAuthHeader());
 export const getUserDraftsApi = (userId) => Api.get(`/api/posts/get_drafts/${userId}`, getAuthHeader());
 export const deletePostApi = (id) => Api.delete(`/api/posts/delete/${id}`, getAuthHeader());
+
+// --- INTERACTION APIS ---
 export const likePostApi = (id, userId) => 
     Api.put(`/api/posts/like/${id}`, { userId }, getAuthHeader());
 
 export const addCommentApi = (id, data) => 
     Api.post(`/api/posts/comment/${id}`, data, getAuthHeader());
+
+export const updateCommentApi = (postId, commentId, data) => 
+    Api.put(`/api/posts/comment/update/${postId}/${commentId}`, data, getAuthHeader());
+
+export const deleteCommentApi = (postId, commentId, userId) => 
+    Api.delete(`/api/posts/comment/delete/${postId}/${commentId}`, { 
+        data: { userId }, 
+        ...getAuthHeader() 
+    });

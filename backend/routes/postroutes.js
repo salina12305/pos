@@ -5,15 +5,13 @@ const upload = require("../middleware/upload");
 
 // Path: /api/posts/create
 router.post('/create', authGuard, upload.single('image'), postController.createPost);
-
-// Path: /api/posts/get_published
 router.get('/get_published', authGuard, postController.getPublishedPosts);
-
 router.get('/get_drafts/:userId', authGuard, postController.getDraftsByUser);
-
-// Path: /api/posts/delete/:id
 router.delete('/delete/:id', authGuard, postController.deletePost);
+
 router.put('/like/:id', authGuard, postController.likePost);
 router.post('/comment/:id', authGuard, postController.addComment);
+router.put('/comment/update/:postId/:commentId', authGuard, postController.updateComment);
+router.delete('/comment/delete/:postId/:commentId', authGuard, postController.deleteComment);
 
 module.exports = router;
