@@ -8,6 +8,8 @@ router.post('/create', authGuard, upload.single('image'), postController.createP
 router.get('/get_published', authGuard, postController.getPublishedPosts);
 router.get('/get_drafts/:userId', authGuard, postController.getDraftsByUser);
 router.delete('/delete/:id', authGuard, postController.deletePost);
+router.put("/update/:id", authGuard, upload.single('image'), postController.updatePost);
+router.get("/get_single_post/:id", authGuard, postController.getSinglePost);
 
 router.put('/like/:id', authGuard, postController.likePost);
 router.post('/comment/:id', authGuard, postController.addComment);

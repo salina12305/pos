@@ -212,7 +212,6 @@ const FullPostModal = ({ post, user, onClose, onRefresh }) => {
         if (!editText.trim()) return;
         
         const loadId = toast.loading("Updating...");
-        // Ensure we are getting the correct UUID from Sequelize
         const postId = post.id; 
     
         try {
@@ -227,7 +226,6 @@ const FullPostModal = ({ post, user, onClose, onRefresh }) => {
                 onRefresh();
             }
         } catch (err) {
-            // IMPROVED DEBUGGING:
             console.error("Full Error Object:", err);
             const errorMessage = err.response?.data?.message || "Update failed.";
             toast.error(errorMessage, { id: loadId });

@@ -34,6 +34,8 @@ export const createPostApi = (data) => Api.post("/api/posts/create", data, getMu
 export const getPublishedPostsApi = () => Api.get("/api/posts/get_published", getAuthHeader());
 export const getUserDraftsApi = (userId) => Api.get(`/api/posts/get_drafts/${userId}`, getAuthHeader());
 export const deletePostApi = (id) => Api.delete(`/api/posts/delete/${id}`, getAuthHeader());
+export const updatePostApi = (id, data) => Api.put(`/api/posts/update/${id}`, data, getMultipartConfig());
+export const getSinglePostApi = (id) => Api.get(`/api/posts/get_single_post/${id}`, getAuthHeader());
 
 // --- INTERACTION APIS ---
 export const likePostApi = (id, userId) => 

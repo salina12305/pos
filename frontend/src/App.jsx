@@ -6,6 +6,7 @@ import ForgotPw from './pages/ForgotPw';
 import FeedPage from './pages/FeedPage';
 import CreatePostPage from './pages/CreatePostPage';
 import ProfilePage from './pages/ProfilePage';
+import EditPost from './pages/EditPost';
 
 function App() {
   return (
@@ -30,6 +31,7 @@ function App() {
         <Route path="/feedpage" element={<FeedPage />} />
         <Route path="/create-post" element={<CreatePostPage />} />
         <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/edit-post/:id" element={<EditPost />} />
       </Routes>
     </Router>
   );

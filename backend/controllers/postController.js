@@ -72,6 +72,49 @@ const deletePost = async (req, res) => {
   }
 };
 
+const updatePost = async (req, res) => {
+  try {
+      const { id } = req.params;
+      const { title, snippet } = req.body;
+      let imageName = req.body.image; // Keep old image name by default
+
+      // If a new file was uploaded via multer
+      if (req.file) {
+          imageName = req.file.filename;
+      }
+
+      const post = await Post.findByPk(id);
+      if (!post) return res.status(404).json({ success: false, message: "Post not found" });
+
+      // Update fields
+      post.title = title || post.title;
+      post.snippet = snippet || post.snippet;
+      post.image = imageName;
+
+      await post.save();
+
+      res.status(200).json({ 
+          success: true, 
+          message: "Post updated successfully", 
+          data: post 
+      });
+  } catch (error) {
+      res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+const getSinglePost = async (req, res) => {
+  try {
+      const post = await Post.findByPk(req.params.id);
+      if (!post) {
+          return res.status(404).json({ success: false, message: "Post not found" });
+      }
+      res.status(200).json({ success: true, data: post });
+  } catch (error) {
+      res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 const likePost = async (req, res) => {
   try {
     const { id } = req.params;
@@ -224,6 +267,8 @@ module.exports = {
     getPublishedPosts,
     getDraftsByUser,
     deletePost,
+    updatePost,
+    getSinglePost,
     likePost,
     addComment,
     updateComment,
