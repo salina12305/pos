@@ -1,5 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 
 const Navbar = () => {
     const navigate = useNavigate();
@@ -21,16 +22,27 @@ const Navbar = () => {
             >
                 Postify
             </h1>
-            
-            <div className="flex items-center gap-4">
-                <span className="text-gray-600 font-medium hidden sm:block">
-                    {displayName}
-                </span>
-                <div 
-                    onClick={() => navigate("/profile")}
-                    className="w-10 h-10 bg-emerald-700 rounded-full flex items-center justify-center text-white font-bold cursor-pointer hover:bg-emerald-800 transition-colors shadow-sm"
+
+            <div className="flex items-center gap-6">
+                {/* Search Icon Link */}
+                <button 
+                    onClick={() => navigate("/search")}
+                    className="p-2 text-gray-500 hover:text-emerald-700 hover:bg-emerald-50 rounded-full transition"
+                    title="Search Stories"
                 >
-                    {displayName.charAt(0).toUpperCase()}
+                    <MagnifyingGlassIcon className="w-6 h-6" />
+                </button> 
+            
+                <div className="flex items-center gap-4 border-l pl-6 border-gray-100">
+                    <span className="text-gray-600 font-medium hidden sm:block">
+                        {displayName}
+                    </span>
+                    <div 
+                        onClick={() => navigate("/profile")}
+                        className="w-10 h-10 bg-emerald-700 rounded-full flex items-center justify-center text-white font-bold cursor-pointer hover:bg-emerald-800 transition-colors shadow-sm"
+                    >
+                        {displayName.charAt(0).toUpperCase()}
+                    </div>
                 </div>
             </div>
         </nav>

@@ -184,7 +184,7 @@ const ProfilePage = () => {
                     {/* Stats */}
                     <div className="bg-emerald-900 rounded-[2.5rem] p-10 text-white flex items-center justify-between overflow-hidden relative shadow-2xl">
                         <div className="relative z-10">
-                            <p className="text-emerald-200 font-sans text-xs font-bold uppercase tracking-[0.2em] mb-2">Portfolio</p>
+                            <p className="text-emerald-200 font-sans text-xs font-bold uppercase tracking-[0.2em] mb-2">Total Published Story</p>
                             <h2 className="text-6xl font-bold">{publishedCount}</h2>
                             <p className="text-emerald-100 italic opacity-80 mt-2">Stories Published</p>
                         </div>
@@ -193,7 +193,7 @@ const ProfilePage = () => {
 
                     {/* Drafts List */}
                     <section>
-                        <h3 className="text-2xl font-bold italic mb-6">Unfinished Stories</h3>
+                        <h3 className="text-2xl font-bold italic mb-6">Draft Stories</h3>
                         
                         <div className="space-y-4">
                             {isLoading ? (
@@ -236,7 +236,7 @@ const ProfilePage = () => {
                                 onClick={() => navigate("/create-post")}
                                 className="w-full border-2 border-dashed border-gray-200 py-5 rounded-[2rem] font-sans text-xs font-bold text-gray-400 hover:border-emerald-300 hover:text-emerald-600 hover:bg-emerald-50/50 transition duration-300"
                             >
-                                + BEGIN A NEW CHAPTER
+                                + CREATE A NEW STORY
                             </button>
                         </div>
                     </section>

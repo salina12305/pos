@@ -1,7 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom"; // Added useLocation
 import Navbar from './components/Navbar';
-import { getPublishedPostsApi, deletePostApi, likePostApi, addCommentApi, updateCommentApi, deleteCommentApi } from '../services/api';
+import { 
+    getPublishedPostsApi, 
+    deletePostApi, 
+    likePostApi, 
+    addCommentApi, 
+    updateCommentApi, 
+    deleteCommentApi 
+} from '../services/api';
 import toast from 'react-hot-toast'; 
 import { 
     ChatBubbleLeftIcon, 
@@ -18,6 +25,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const FeedPage = () => {
     const navigate = useNavigate();
+    const { hash } = useLocation(); // Get the #post-id from URL
     const [posts, setPosts] = useState([]); 
     const [loading, setLoading] = useState(true);
     const [selectedPost, setSelectedPost] = useState(null);
@@ -31,10 +39,11 @@ const FeedPage = () => {
             setLoading(true);
             const response = await getPublishedPostsApi();
             const postData = response.data.success ? response.data.data : response.data;
-            setPosts(Array.isArray(postData) ? postData : []);
+            const finalPosts = Array.isArray(postData) ? postData : [];
+            setPosts(finalPosts);
 
             if (selectedPost) {
-                const updatedSelected = postData.find(p => (p._id || p.id) === (selectedPost._id || selectedPost.id));
+                const updatedSelected = finalPosts.find(p => (p._id || p.id) === (selectedPost._id || selectedPost.id));
                 if (updatedSelected) setSelectedPost(updatedSelected);
             }
         } catch (err) {
@@ -45,7 +54,29 @@ const FeedPage = () => {
         }
     };
 
-    useEffect(() => { fetchPosts(); }, []);
+    useEffect(() => { 
+        fetchPosts(); 
+    }, []);
+
+    // --- SCROLL TO SEARCH RESULT LOGIC ---
+    useEffect(() => {
+        if (hash && posts.length > 0) {
+            const targetId = hash.replace('#', '');
+            const element = document.getElementById(targetId);
+            
+            if (element) {
+                setTimeout(() => {
+                    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    
+                    // Add a temporary highlight effect
+                    element.classList.add('ring-4', 'ring-emerald-500', 'ring-offset-4');
+                    setTimeout(() => {
+                        element.classList.remove('ring-4', 'ring-emerald-500', 'ring-offset-4');
+                    }, 3000);
+                }, 500); // Small delay to ensure browser rendering
+            }
+        }
+    }, [hash, posts]);
 
     return (
         <div className="min-h-screen bg-[#F8F9FA] font-sans pb-10">
@@ -62,6 +93,8 @@ const FeedPage = () => {
                         {posts.map((post) => (
                             <PostCard 
                                 key={post._id || post.id} 
+                                // ID is crucial for the scrolling logic
+                                id={`post-${post._id || post.id}`} 
                                 post={post} 
                                 currentUserId={currentUserId}
                                 onCardClick={() => setSelectedPost(post)}
@@ -89,11 +122,8 @@ const FeedPage = () => {
 };
 
 /* --- PostCard Component --- */
-const PostCard = ({ post, onCardClick, currentUserId, onDeleteRefresh, navigate }) => {
-    // Check ownership using the userId field from the post model
+const PostCard = ({ id, post, onCardClick, currentUserId, onDeleteRefresh, navigate }) => {
     const isAuthor = currentUserId && String(post.userId) === String(currentUserId);
-    
-    // Check if user is in the likes array (handles both JSON and Array formats safely)
     const isLiked = post.likes && Array.isArray(post.likes) 
         ? post.likes.includes(String(currentUserId)) 
         : false;
@@ -105,7 +135,6 @@ const PostCard = ({ post, onCardClick, currentUserId, onDeleteRefresh, navigate 
             const response = await likePostApi(post._id || post.id, currentUserId);
             if (response.data.success) onDeleteRefresh(); 
         } catch (err) {
-            console.error("Like error:", err);
             toast.error("Failed to update like.");
         }
     };
@@ -125,20 +154,24 @@ const PostCard = ({ post, onCardClick, currentUserId, onDeleteRefresh, navigate 
                                 onDeleteRefresh();
                             }
                         } catch (err) { toast.error("Could not delete."); }
-                    }} className="bg-red-500 px-4 py-1.5 rounded-lg text-white text-xs font-bold transition hover:bg-red-600">Delete</button>
-                    <button onClick={() => toast.dismiss(t.id)} className="bg-gray-600 px-4 py-1.5 rounded-lg text-white text-xs font-bold transition hover:bg-gray-500">Cancel</button>
+                    }} className="bg-red-500 px-4 py-1.5 rounded-lg text-white text-xs font-bold hover:bg-red-600">Delete</button>
+                    <button onClick={() => toast.dismiss(t.id)} className="bg-gray-600 px-4 py-1.5 rounded-lg text-white text-xs font-bold hover:bg-gray-500">Cancel</button>
                 </div>
             </div>
         ), { duration: 5000, style: { background: '#333' } });
     };
 
     const imageSrc = post.image?.startsWith('http') 
-    ? post.image 
-    : `${API_BASE_URL}/uploads/${post.image}`;
+        ? post.image 
+        : `${API_BASE_URL}/uploads/${post.image}`;
     const fallbackImage = "https://images.unsplash.com/photo-1499750310107-5fef28a66643?auto=format&fit=crop&w=800&q=80";
 
     return (
-        <div onClick={onCardClick} className="bg-white rounded-[2rem] overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl transition-all cursor-pointer group">
+        <div 
+            id={id} // Crucial: This links with the Search Page navigate hash
+            onClick={onCardClick} 
+            className="bg-white rounded-[2rem] overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-500 cursor-pointer group"
+        >
             <div className="relative h-64 overflow-hidden">
                 <img 
                     src={imageSrc} 
@@ -181,7 +214,7 @@ const PostCard = ({ post, onCardClick, currentUserId, onDeleteRefresh, navigate 
     );
 };
 
-/* --- FullPostModal Component  --- */
+/* --- FullPostModal Component --- */
 const FullPostModal = ({ post, user, onClose, onRefresh }) => {
     const [commentText, setCommentText] = useState("");
     const [editingCommentId, setEditingCommentId] = useState(null);
@@ -198,7 +231,7 @@ const FullPostModal = ({ post, user, onClose, onRefresh }) => {
             const response = await addCommentApi(post._id || post.id, {
                 text: commentText,
                 user: user?.username || user?.firstName || "Anonymous",
-                userId: currentUserId // Critical: Store the ID
+                userId: currentUserId
             });
             if (response.data.success) {
                 toast.success("Commented!", { id: loadId });
@@ -210,41 +243,33 @@ const FullPostModal = ({ post, user, onClose, onRefresh }) => {
 
     const handleUpdateComment = async (commentId) => {
         if (!editText.trim()) return;
-        
         const loadId = toast.loading("Updating...");
-        const postId = post.id; 
-    
         try {
-            const response = await updateCommentApi(postId, commentId, {
+            const response = await updateCommentApi(post._id || post.id, commentId, {
                 text: editText,
                 userId: currentUserId 
             });
-    
             if (response.data.success) {
                 toast.success("Updated!", { id: loadId });
                 setEditingCommentId(null);
                 onRefresh();
             }
         } catch (err) {
-            console.error("Full Error Object:", err);
-            const errorMessage = err.response?.data?.message || "Update failed.";
-            toast.error(errorMessage, { id: loadId });
+            toast.error("Update failed.", { id: loadId });
         }
     };
 
     const handleDeleteComment = (commentId) => {
         toast((t) => (
             <div className="flex flex-col gap-2">
-                <span className="text-sm font-medium text-white-900">
-                    Delete this comment?
-                </span>
+                <span className="text-sm font-medium text-white">Delete this comment?</span>
                 <div className="flex gap-2">
                     <button
                         onClick={async () => {
                             toast.dismiss(t.id);
                             const loadId = toast.loading("Removing...");
                             try {
-                                const response = await deleteCommentApi(post.id, commentId, currentUserId);
+                                const response = await deleteCommentApi(post._id || post.id, commentId, currentUserId);
                                 if (response.data.success) {
                                     toast.success("Comment deleted!", { id: loadId });
                                     onRefresh();
@@ -253,25 +278,19 @@ const FullPostModal = ({ post, user, onClose, onRefresh }) => {
                                 toast.error("Failed to delete.", { id: loadId });
                             }
                         }}
-                        className="bg-red-500 text-white px-3 py-1 rounded-md text-xs font-bold hover:bg-red-600 transition"
+                        className="bg-red-500 text-white px-3 py-1 rounded-md text-xs font-bold hover:bg-red-600"
                     >
                         Delete
                     </button>
-                    <button
-                        onClick={() => toast.dismiss(t.id)}
-                        className="bg-gray-200 text-gray-700 px-3 py-1 rounded-md text-xs font-bold hover:bg-gray-300 transition"
-                    >
-                        Cancel
-                    </button>
+                    <button onClick={() => toast.dismiss(t.id)} className="bg-gray-200 text-gray-700 px-3 py-1 rounded-md text-xs font-bold">Cancel</button>
                 </div>
             </div>
-        )
-    );
+        ), { style: { background: '#333' } });
     };
 
-const imageSrc = post.image?.startsWith('http') 
-    ? post.image 
-    : `${API_BASE_URL}/uploads/${post.image}`;
+    const imageSrc = post.image?.startsWith('http') 
+        ? post.image 
+        : `${API_BASE_URL}/uploads/${post.image}`;
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
@@ -280,7 +299,6 @@ const imageSrc = post.image?.startsWith('http')
                     <XMarkIcon className="w-6 h-6 text-gray-900" />
                 </button>
 
-                {/* Left Side: Post Content */}
                 <div className="flex-1 overflow-y-auto border-r border-gray-100">
                     <img src={imageSrc} className="w-full h-80 object-cover" alt="Cover" />
                     <div className="p-10">
@@ -296,89 +314,49 @@ const imageSrc = post.image?.startsWith('http')
                     </div>
                 </div>
 
-                {/* Right Side: Comments Section */}
                 <div className="w-full md:w-96 bg-gray-50 flex flex-col h-full">
                     <div className="p-6 border-b border-gray-200 bg-white font-bold">Discussion ({comments.length})</div>
-                    
                     <div className="flex-1 overflow-y-auto p-6 space-y-4">
-                    {comments.length > 0 ? comments.map((c) => {
-                        // PERMISSION CHECKS
-                        const isCommentOwner = String(c.userId) === String(currentUserId);
-                        const isPostCreator = String(post.userId) === String(currentUserId);
-                        return (
-                            <div key={c.id} className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 group">
-                                <div className="flex justify-between items-center mb-1">
-                                    <p className="text-xs font-bold text-emerald-700">@{c.user}</p>
-                    
-                                    {/* Action Buttons: Visible on hover of the comment card */}
-                                <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        
-                                    {/* EDIT: Only shown to the person who wrote the comment */}
-                                    {isCommentOwner && editingCommentId !== c.id && (
-                                        <button onClick={() => { setEditingCommentId(c.id); setEditText(c.text); }}
-                                            className="text-[10px] text-blue-500 hover:text-blue-700 font-bold"
-                                        >
-                                            Edit
-                                        </button>
-                                    )}
-
-                                    {/* DELETE: Shown to the comment owner OR the post creator */}
-                                    {(isCommentOwner || isPostCreator) && (
-                                        <button onClick={() => handleDeleteComment(c.id)}
-                                            className="text-[10px] text-red-500 hover:text-red-700 font-bold"
-                                        >
-                                            Delete
-                                        </button>
-                                    )}
-                                </div>
-                            </div>
-
-                            {editingCommentId === c.id ? (
-                                <div className="space-y-2 mt-2">
-                                    <textarea className="w-full text-sm p-2 border border-emerald-100 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
-                                        value={editText}
-                                        onChange={(e) => setEditText(e.target.value)}
-                                        rows="2"
-                                    />
-                                    <div className="flex gap-2">
-                                        <button onClick={() => handleUpdateComment(c.id)}
-                                            className="text-[10px] bg-emerald-600 text-white px-3 py-1 rounded-full font-bold hover:bg-emerald-700"
-                                        >
-                                            Save
-                                        </button>
-                                        <button onClick={() => setEditingCommentId(null)}
-                                            className="text-[10px] bg-gray-200 text-gray-600 px-3 py-1 rounded-full font-bold hover:bg-gray-300"
-                                        >
-                                            Cancel
-                                        </button>
+                        {comments.length > 0 ? comments.map((c) => {
+                            const isCommentOwner = String(c.userId) === String(currentUserId);
+                            const isPostCreator = String(post.userId) === String(currentUserId);
+                            return (
+                                <div key={c.id} className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 group">
+                                    <div className="flex justify-between items-center mb-1">
+                                        <p className="text-xs font-bold text-emerald-700">@{c.user}</p>
+                                        <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            {isCommentOwner && editingCommentId !== c.id && (
+                                                <button onClick={() => { setEditingCommentId(c.id); setEditText(c.text); }} className="text-[10px] text-blue-500 hover:text-blue-700 font-bold">Edit</button>
+                                            )}
+                                            {(isCommentOwner || isPostCreator) && (
+                                                <button onClick={() => handleDeleteComment(c.id)} className="text-[10px] text-red-500 hover:text-red-700 font-bold">Delete</button>
+                                            )}
+                                        </div>
                                     </div>
+                                    {editingCommentId === c.id ? (
+                                        <div className="space-y-2 mt-2">
+                                            <textarea className="w-full text-sm p-2 border border-emerald-100 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none" value={editText} onChange={(e) => setEditText(e.target.value)} rows="2" />
+                                            <div className="flex gap-2">
+                                                <button onClick={() => handleUpdateComment(c.id)} className="text-[10px] bg-emerald-600 text-white px-3 py-1 rounded-full font-bold hover:bg-emerald-700">Save</button>
+                                                <button onClick={() => setEditingCommentId(null)} className="text-[10px] bg-gray-200 text-gray-600 px-3 py-1 rounded-full font-bold hover:bg-gray-300">Cancel</button>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <p className="text-sm text-gray-700 leading-snug">{c.text}</p>
+                                    )}
                                 </div>
-                            ) : (
-                                <p className="text-sm text-gray-700 leading-snug">{c.text}</p>
-                            )}
-                        </div>
-                    );
-                    }) : (
-                        <div className="flex flex-col items-center justify-center py-10 text-gray-400">
-                            <ChatBubbleLeftIcon className="w-8 h-8 mb-2 opacity-20" />
-                            <p className="text-sm">Be the first to comment!</p>
-                        </div>
-                    )}
+                            );
+                        }) : (
+                            <div className="flex flex-col items-center justify-center py-10 text-gray-400">
+                                <ChatBubbleLeftIcon className="w-8 h-8 mb-2 opacity-20" />
+                                <p className="text-sm">Be the first to comment!</p>
+                            </div>
+                        )}
                     </div>
-
-                    {/* New Comment Input */}
                     <div className="p-4 bg-white border-t border-gray-200">
                         <form onSubmit={handleCommentSubmit} className="relative">
-                            <input 
-                                type="text" 
-                                value={commentText}
-                                onChange={(e) => setCommentText(e.target.value)}
-                                placeholder="Add a comment..."
-                                className="w-full py-3 px-4 pr-12 bg-gray-100 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                            />
-                            <button type="submit" className="absolute right-2 top-1.5 p-1.5 bg-emerald-600 text-white rounded-full hover:bg-emerald-700 transition">
-                                <PaperAirplaneIcon className="w-4 h-4" />
-                            </button>
+                            <input type="text" value={commentText} onChange={(e) => setCommentText(e.target.value)} placeholder="Add a comment..." className="w-full py-3 px-4 pr-12 bg-gray-100 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+                            <button type="submit" className="absolute right-2 top-1.5 p-1.5 bg-emerald-600 text-white rounded-full hover:bg-emerald-700 transition"><PaperAirplaneIcon className="w-4 h-4" /></button>
                         </form>
                     </div>
                 </div>

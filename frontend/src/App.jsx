@@ -7,11 +7,11 @@ import FeedPage from './pages/FeedPage';
 import CreatePostPage from './pages/CreatePostPage';
 import ProfilePage from './pages/ProfilePage';
 import EditPost from './pages/EditPost';
+import SearchPage from './pages/SearchPage';
 
 function App() {
   return (
     <Router>
-      {/* This is the 'stage' where all your toasts will perform */}
       <Toaster 
         position="top-center" 
         reverseOrder={false}
@@ -32,6 +32,7 @@ function App() {
         <Route path="/create-post" element={<CreatePostPage />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/edit-post/:id" element={<EditPost />} />
+        <Route path="/search" element={<SearchPage />} />
       </Routes>
     </Router>
   );
