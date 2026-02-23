@@ -30,6 +30,14 @@ const User = sequelize.define(
             type: DataTypes.ENUM('user'),
             defaultValue:'user',
         },
+        verificationToken: {
+            type: DataTypes.STRING,
+            allowNull: true
+        },
+        TokenExpires: {
+            type: DataTypes.DATE,
+            allowNull: true
+        }
     },
     {
         tableName: "users",

@@ -66,7 +66,7 @@ const PostifyRegister = ({ setOpen, openLogin }) => {
                localStorage.setItem('tempUserId', userId);
                toast.success("User created successfully!");
                setTimeout(() => {
-                navigate("/login");
+                openLogin();
               }, 2000);
             } else {
             toast.error(response.data.message || "User creation failed!");

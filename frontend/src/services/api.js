@@ -28,6 +28,8 @@ const getMultipartConfig = () => ({
 export const createUserApi = (data) => Api.post("/api/user/register", data);
 export const loginUserApi = (data) => Api.post("api/user/login", data);
 export const getUserById = (id) => Api.get(`/api/user/getUserByid/${id}`, getAuthHeader());
+export const forgotPasswordApi = (data) => Api.post("/api/user/forgot-password", data);
+export const resetPasswordApi = (data) => Api.post("/api/user/reset-password", data);
 
 // --- POST APIS ---
 export const createPostApi = (data) => Api.post("/api/posts/create", data, getMultipartConfig());

@@ -1,8 +1,10 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
+
 import LandingPage from './pages/LandingPage';
 import About from './pages/About';
 import ForgotPw from './pages/ForgotPw';
+import ResetPassword from './pages/ResetPassword';
 import FeedPage from './pages/FeedPage';
 import CreatePostPage from './pages/CreatePostPage';
 import ProfilePage from './pages/ProfilePage';
@@ -28,6 +30,7 @@ function App() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/about" element={<About />} />
         <Route path="/forgotpw" element={<ForgotPw />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/feedpage" element={<FeedPage />} />
         <Route path="/create-post" element={<CreatePostPage />} />
         <Route path="/profile" element={<ProfilePage />} />

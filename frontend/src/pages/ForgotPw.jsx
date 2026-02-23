@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import toast from "react-hot-toast";
-// import { forgotPasswordApi } from "../services/api"; // Ensure this is created in your api.js
+import { forgotPasswordApi } from "../services/api"; 
 
 const ForgotPw = ({ setOpen, openLogin }) => {
   const [email, setEmail] = useState("");
