@@ -2,15 +2,20 @@
 const User =require("../models/usermodel");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const crypto = require("crypto");
+const sendEmail = require("../utils/sendEmail");
 
+// Create a new user (Registration)
 const addUser = async (req,res) => {
     try{
         const{ username, email, password}=req.body;
+        // 1. Basic Validation
         if(!username || !email || !password){
             return res.status(400).json({
                 message:"All fields are required"
             });
         }
+        // 2. Check if user already exists by username or email
         const isUser = await User.findOne({ where: { username } });
         const isEmail = await User.findOne({ where: { email } });
 
@@ -20,8 +25,11 @@ const addUser = async (req,res) => {
                 message:"User with this email exist!!"
             });
         }
+        // 3. Hash password for security
         const hashedPassword = await  bcrypt.hash(password,10)
         console.log(hashedPassword)
+
+        // 4. Create record in database
         const newUser = await User.create({
             username: username,
             email,
@@ -46,6 +54,7 @@ const addUser = async (req,res) => {
     }
 };
 
+// Get all users (excluding passwords)
 const getAllUsers = async (req, res) => {
     try {
         const users = await User.findAll({ attributes: { exclude: ["password"] } });
@@ -55,6 +64,7 @@ const getAllUsers = async (req, res) => {
     }
 };
 
+// Get a single user by Primary key (ID)
 const getUsersById  = async (req, res) =>{
     try {
         const id = req.params.uid;
@@ -74,6 +84,7 @@ const getUsersById  = async (req, res) =>{
    }
 };
 
+// Update user details (username, email, or password)
 const updateUser  = async (req, res) =>{
     try {
         const id = req.params.id;
@@ -84,6 +95,7 @@ const updateUser  = async (req, res) =>{
                 message:"User not found",
             });
         }
+        // Check if the new username is already taken by someone else
         if (username) {
             const isexistinguser = await User.findOne({ where: { username } })
             if (isexistinguser && isexistinguser.id !== user.id) {
@@ -92,23 +104,25 @@ const updateUser  = async (req, res) =>{
                 message: "user with that username exist!",
               });
             }
-        let hashedPassword= user.password;
-        if(password){
-            hashedPassword= await bcrypt.hash(password,10);
-        }
-        await user.update({
-            username: username || user.username,
-            email: email || user.email,
-            password: hashedPassword,
+            // Handle password update if provided
+            let hashedPassword= user.password;
+            if(password){
+                hashedPassword= await bcrypt.hash(password,10);
+            }
+            // Update fields (fall back to existing data if body is empty)
+            await user.update({
+                username: username || user.username,
+                email: email || user.email,
+                password: hashedPassword,
             });
-        return res.status(200).json({
-            success:true,
-            message: "Users update successfully",
-            user:{
-                id:user.id
-            },
-        });
-    }
+            return res.status(200).json({
+                success:true,
+                message: "Users update successfully",
+                user:{
+                    id:user.id
+                },
+            });
+        }
     } catch (error) {
         return res.status(500).json({ 
             message: "Error updating users", 
@@ -116,6 +130,8 @@ const updateUser  = async (req, res) =>{
         });
    }
 };
+
+// Delete a user from the database
 const deleteUser = async (req, res) => {
     try {
         const { id } = req.params; 
@@ -126,33 +142,39 @@ const deleteUser = async (req, res) => {
               message: "User not found",
             });
         }
-          await user.destroy();
+        await user.destroy();
           return res.status(200).json({
             success:true,
             message: "User deleted successfully",
         });
-    } catch (error) {
+        } catch (error) {
             return res.status(500).json({
               message: "Error deleting user",
               error: error.message,
-            });
-        }
+            }
+        );
+    }
 };
+
+// Authenticate user & get token
 const loginUser=async(req,res)=>{
     try{
         const {email,password,role}=req.body
+        // Find user by email
         const user=await User.findOne({where:{email}})
         if (!user){
             return res.status(400).json({
               message: "Users not found!!"
             });
         }
+        // Compare plain text password with hashed password
         const isvalidUser = await bcrypt.compare(password,user.password)
         if (!isvalidUser){
             return res.status(400).json({
                 message:"Invalid email or password!!"
             });
         }
+        // Generate JWT Token
         const token = jwt.sign(
             { id: user.id, role: user.role, email: user.email, username:user.username },
             process.env.JWT_SECRET || "your_fallback_secret", 
@@ -174,9 +196,8 @@ const loginUser=async(req,res)=>{
         return res.status(500).json({ success: false, error: error.message });
     }
 };
-const crypto = require("crypto");
-const sendEmail = require("../utils/sendEmail");
 
+// Generate reset token and email it to user
 const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
@@ -185,7 +206,7 @@ const forgotPassword = async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-
+    // Generate a random unique token
     const resetToken = crypto.randomBytes(32).toString("hex");
 
     // Saving token and 1-hour expiry to Sequelize DB
@@ -213,6 +234,7 @@ const forgotPassword = async (req, res) => {
   }
 };
 
+// Validate token and update user password
 const resetPassword = async (req, res) => {
     try {
         const { token, password } = req.body;
@@ -220,7 +242,7 @@ const resetPassword = async (req, res) => {
         if (!token || !password) {
             return res.status(400).json({ message: "Token and new password are required" });
         }
-
+        // Find user with matching token that hasn't expired yet
         const user = await User.findOne({
             where: {
                 verificationToken: token,

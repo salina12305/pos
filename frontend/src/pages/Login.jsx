@@ -31,31 +31,7 @@ const PostifyLogin = ({ setOpen, openRegister, openForgotPw }) => {
         try {
             const response = await loginUserApi(formData);
             console.log("Backend Response:", response.data);
-            
-            // if (response.status === 200 || response.status === 201) {
-            //     const token = response.data.token;
-        
-            //     if (!token) {
-            //       return toast.error("Login worked, but no token was received.");
-            //     }
-            //     localStorage.setItem("token_postify", token);
 
-            //     if (response.data.user  && response.data.user.id) {
-            //         localStorage.setItem("userId", response.data.user.id);
-            //     }
-            //     localStorage.setItem("user", JSON.stringify(response.data.user));
-            //     toast.success(response.data.message || "Login successful!");
-            //     let decoded;
-            //     try {
-            //         decoded = jwtDecode(token);
-            //         console.log("Decoded Token Data:", decoded);
-            //     } catch (tokenError) {
-            //       console.error("JWT Decode Error:", tokenError);
-            //       return toast.error("Token format is invalid.");
-            //     }
-            //     setTimeout(() => {
-            //         navigate("/feedpage"); 
-            //     }, 2000);
             if (response.status === 200 || response.status === 201) {
                 const token = response.data.token;
                 localStorage.setItem("token_postify", token);

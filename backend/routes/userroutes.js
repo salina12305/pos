@@ -1,6 +1,7 @@
 
 const router = require("express").Router();
 
+// Importing controller functions
 const { addUser, 
     getAllUsers,
     getUsersById,
@@ -8,8 +9,9 @@ const { addUser,
     loginUser,
     forgotPassword,
     resetPassword
- } = require('../controllers/userController')
+} = require('../controllers/userController')
 
+// AUTHENTICATION ROUTES
 router.post("/register", addUser);
 router.post("/login", loginUser);
 router.get("/getallUsers", getAllUsers);

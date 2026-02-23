@@ -11,7 +11,7 @@ const sendEmail = async (email, subject, htmlContent) => {
     });
 
     const mailOptions = {
-      from: `"Nepal TrekMate" <${process.env.EMAIL_USER}>`,
+      from: `"Postify" <${process.env.EMAIL_USER}>`,
       to: email,
       subject: subject,
       html: htmlContent,

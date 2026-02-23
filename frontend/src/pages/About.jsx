@@ -74,6 +74,7 @@ const About = () => {
 
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', marginTop: '40px' }}>
           
+          {/* Mission Card */}
           <div style={{
             flex: '1',
             minWidth: '300px',
@@ -89,6 +90,7 @@ const About = () => {
             </p>
           </div>
 
+          {/* Values Card */}
           <div style={{
             flex: '1',
             minWidth: '300px',

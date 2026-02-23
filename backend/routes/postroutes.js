@@ -11,6 +11,7 @@ router.delete('/delete/:id', authGuard, postController.deletePost);
 router.put("/update/:id", authGuard, upload.single('image'), postController.updatePost);
 router.get("/get_single_post/:id", authGuard, postController.getSinglePost);
 
+// ENGAGEMENT ROUTES (Likes & Comments)
 router.put('/like/:id', authGuard, postController.likePost);
 router.post('/comment/:id', authGuard, postController.addComment);
 router.put('/comment/update/:postId/:commentId', authGuard, postController.updateComment);

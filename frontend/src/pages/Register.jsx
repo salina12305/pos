@@ -5,9 +5,11 @@ import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 import { createUserApi } from "../services/api";
 
 const PostifyRegister = ({ setOpen, openLogin }) => {
+    // --- State Management ---
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const navigate = useNavigate();
+    // Unified state object for form inputs
     const [formData, setFormData] = useState({
         username: "",
         email: "",
@@ -31,6 +33,7 @@ const PostifyRegister = ({ setOpen, openLogin }) => {
             toast.error('Email is required');
             return false;
         }
+        // Basic Regex for email format validation
         if (!/\S+@\S+\.\S+/.test(formData.email)) {
             toast.error('Invalid email format');
             return false;
@@ -50,8 +53,10 @@ const PostifyRegister = ({ setOpen, openLogin }) => {
         return true;
     };
 
+     //  Handles the final submission of the registration form
     const handleSubmit = async (e) => {
         e.preventDefault();
+        // Block submission if local validation fails
         if (!validate()) return;
         try {
             const dataToSubmit = {
@@ -60,11 +65,15 @@ const PostifyRegister = ({ setOpen, openLogin }) => {
                 password: formData.password,
                 confirmPassword: formData.confirmPassword,
             };
-            const response=await createUserApi(dataToSubmit) ;
+            const response=await createUserApi(dataToSubmit);
+
+            // Check for successful creation (HTTP 200 or 201)
             if (response.status === 200 || response.status === 201) {
                 const userId = response.data.id; 
                localStorage.setItem('tempUserId', userId);
                toast.success("User created successfully!");
+
+               // Brief delay to allow the user to see the success message
                setTimeout(() => {
                 openLogin();
               }, 2000);
@@ -73,20 +82,25 @@ const PostifyRegister = ({ setOpen, openLogin }) => {
            } 
         } catch (error) {
             console.error("Error Object:", error);
+            // Optional Chaining to find the most relevant error message
             const errorMessage = error.response?.data?.message || error.message || 'Server is unreachable';
             toast.error(errorMessage);
         }
     };
 
     return (
+        // Overlay / Backdrop
         <div className="fixed inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-50">
+            {/* Modal Container */}
             <div className="bg-white p-10 rounded-xl w-[450px] shadow-2xl relative">
                 
+                {/* Close Button */}
                 <button onClick={() => setOpen(false)} className="absolute top-4 right-4 text-2xl text-gray-400">×</button>
 
                 <h2 className="text-center text-3xl font-semibold mb-8">Join Postify</h2>
 
                 <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+                {/* Username Input */}
                 <div>
                         <label className="text-sm font-medium text-gray-700 ml-1">Username</label>
                         <input
