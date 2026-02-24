@@ -11,7 +11,7 @@ const addUser = async (req,res) => {
         const{ username, email, password}=req.body;
         // 1. Basic Validation
         if(!username || !email || !password){
-            return res.status(400).json({
+            return res.status(400).json({ success: false, 
                 message:"All fields are required"
             });
         }

@@ -32,21 +32,54 @@ app.get("/", (req, res) => {
     res.json({ message: "Welcome to the Home Page" });
 });
 
-const PORT = 3000;
+
+//FOR PROJECT
+
+// const PORT = 3000;
+
+// const startServer = async () => {
+//     try {
+//         await connectDB();
+//         // sync({alter: true}) will update your Postgres tables to include the 'Posts' table
+//         await sequelize.sync({ alter: true });
+//         console.log("Database synced successfully");
+
+//         app.listen(PORT, () => {
+//             console.log(`Server is running on port ${PORT}`);
+//         });
+//     } catch (error) {
+//         console.error("Failed to start server:", error);
+//     }
+// };
+
+// startServer();
+
+// FOR TEST
+
+const PORT = process.env.PORT || 3000;
 
 const startServer = async () => {
     try {
         await connectDB();
-        // sync({alter: true}) will update your Postgres tables to include the 'Posts' table
-        await sequelize.sync({ alter: true });
-        console.log("Database synced successfully");
 
-        app.listen(PORT, () => {
-            console.log(`Server is running on port ${PORT}`);
-        });
+        if (process.env.NODE_ENV === 'test') {
+            await sequelize.sync({ force: true });
+        } else {
+            await sequelize.sync({ alter: true });
+        }
+
+        if (process.env.NODE_ENV !== 'test') {
+            app.listen(PORT, () => {
+                console.log(`Server is running on port ${PORT}`);
+            });
+        }
+
     } catch (error) {
         console.error("Failed to start server:", error);
     }
 };
 
+// ALWAYS call this
 startServer();
+
+module.exports = app;
