@@ -17,7 +17,6 @@ app.use(cors({
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
-
 // This tells Express: When someone asks for "/uploads/...", 
 // look inside the "public/uploads" folder on my computer.
 app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
@@ -79,7 +78,6 @@ const startServer = async () => {
     }
 };
 
-// ALWAYS call this
 startServer();
 
 module.exports = app;

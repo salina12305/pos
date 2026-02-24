@@ -40,6 +40,7 @@ const Post = sequelize.define("Post", {
       defaultValue: []
     }
 }, {
+  freezeTableName: true, 
   timestamps: true
 });
 
