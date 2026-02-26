@@ -1,3 +1,4 @@
+// // 1.
 // // for aauthentication
 // const request = require('supertest');
 // const app = require('../index');
@@ -47,6 +48,8 @@
 //   });
 // });
 
+
+// // 2.
 // // post
 // const request = require('supertest');
 // const path = require('path');
@@ -65,22 +68,10 @@
 //     let createdPostId;
 
 //     beforeAll(async () => {
-//         // Ensure we are connected
+//         await new Promise(resolve => setTimeout(resolve, 2000)); 
 //         await sequelize.authenticate();
+//         await Post.destroy({ where: {}, cascade: true });
 
-//         // 1. Drop ENUMs manually if they cause sync to fail
-//         // This is a "Nuclear Option" for Postgres ENUM errors
-//         try {
-//             await sequelize.query('DROP TYPE IF EXISTS "enum_Post_status" CASCADE;');
-//             await sequelize.query('DROP TYPE IF EXISTS "enum_Users_role" CASCADE;');
-//         } catch (err) {
-//             // Ignore if types don't exist
-//         }
-
-//         // 2. Sync Database
-//         await sequelize.sync({ force: true });
-
-//         // 3. Setup folders
 //         const uploadDir = path.join(__dirname, '../uploads');
 //         if (!fs.existsSync(uploadDir)) {
 //             fs.mkdirSync(uploadDir);
@@ -95,7 +86,7 @@
 //     it('should create a new post', async () => {
 //         const res = await request(app)
 //             .post('/api/posts/create')
-//             .field('title', 'TestingStory')
+//             .field('title', 'Stooory')
 //             .field('snippet', 'Once upon the time...')
 //             .field('status', 'published')
 //             .field('author', 'Tester')
@@ -109,7 +100,7 @@
 //     it('should update the post content', async () => {
 //         const res = await request(app)
 //             .put(`/api/posts/update/${createdPostId}`)
-//             .send({ title: 'Update' });
+//             .send({ title: 'Updateee' });
 
 //         expect(res.statusCode).toBe(200);
 //     });
@@ -122,6 +113,7 @@
 //     });
 // });
 
+// // 3.
 // // for comment
 // const request = require('supertest');
 // const path = require('path');
@@ -204,6 +196,8 @@
 //   });
 // });
 
+
+// 4.
 // for like
 const request = require('supertest');
 const path = require('path');
